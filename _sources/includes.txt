@@ -1,0 +1,24 @@
+
+Wrapped C Types and Functions
+==========================
+
+.. warning::
+
+    This is far from a comprehensive list, but we hope to improve it as we go.
+
+
+libavformat/avformat.pxd
+-----------------------------------
+
+.. c:function:: av_register_all()
+
+      Initialize libavformat 
+
+.. c:type:: struct AVFrac
+
+      See: :ffstruct:`FFmpeg's docs <AVFrac>`.
+
+.. c:type:: struct AVStream
+
+      See: :ffstruct:`FFmpeg's docs <AVStream>`.
+
