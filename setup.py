@@ -7,6 +7,7 @@ from subprocess import Popen, PIPE
 import ctypes.util
 import errno
 import os
+from   pprint import pprint, pformat
 import re
 
 try:
@@ -53,11 +54,16 @@ def library_config(name):
 def check_for_func(lib_names, func_name):
     """Define macros if we can find the given function in one of the given libraries."""
 
+    func_found = False
+    lib_found = False
     for lib_name in lib_names:
 
         lib_path = ctypes.util.find_library(lib_name)
         if not lib_path:
+            print('{lib_name} not found.'.format(lib_name=lib_name))
             continue
+
+        print('{lib_name} found.'.format(lib_name=lib_name))
 
         # Open the lib. Look in the path returned by find_library, but also all
         # the paths returned by pkg-config (since we don't get an absolute path
@@ -67,9 +73,16 @@ def check_for_func(lib_names, func_name):
             os.path.join(root, os.path.basename(lib_path))
             for root in set(extension_extra.get('library_dirs', []))
         )
+
+        print('lib_paths:')
+        pprint(lib_paths)
+
         for lib_path in lib_paths:
             try:
                 lib = ctypes.CDLL(lib_path)
+                lib_found = True
+                final_lib_path = lib_path
+                print('Found {lib_name} at {lib_path}'.format(lib_name=lib_name, lib_path=lib_path))
                 break
             except OSError:
                 pass
@@ -78,12 +91,21 @@ def check_for_func(lib_names, func_name):
             print('\n'.join('\t' + path for path in lib_paths))
             continue
 
-        return hasattr(lib, func_name)
+        has_func = hasattr(lib, func_name)
 
-    else:
+        if has_func:
+            print('Found {func_name} in {lib_name} ({lib_path}).'.format(func_name=func_name, lib_name=lib_name, lib_path=final_lib_path))
+            func_found = True
+
+    if not lib_found:
         print('Could not find %r with ctypes.util.find_library' % (lib_names, ))
         print('Some libraries can not be found for inspection; aborting!')
         exit(2)
+
+    if not func_found:
+        print('{func_name} not found in any of {lib_names}.'.format(func_name=func_name, lib_names=pformat(lib_names)))
+
+    return func_found
 
 
 # The "extras" to be supplied to every one of our modules.
